@@ -31,6 +31,28 @@ Display All Books: Show all books in the library in a formatted way.
 Display Statistics:
 
 Total number of books in the library.
+
+
 Percentage of books that have been read.
 Exit: Exit the program.
+
+Features included:
+
+📖 Add new books with title, author, and status
+
+📚 View all books in card format
+
+🔄 Update reading status
+
+🗑️ Delete books
+
+📊 Interactive statistics and charts
+
+📅 Tracking of addition dates
+
+⚠️ Reset functionality
+
+🎨 Custom styling with CSS
+
+📱 Responsive design
 
