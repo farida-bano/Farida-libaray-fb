@@ -375,4 +375,4 @@ elif st.session_state.current_view == "Library Statistics":
 
 # Footer
 st.markdown("---")
-st.markdown("Copyright © 2024 - Personal Library Manager", unsafe_allow_html=True)
+st.markdown("Copyright © 2024 - Farida Bano Personal Library Manager", unsafe_allow_html=True)
