@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_lottie import st_lottie
 import requests
+
 # Set page configuration
 st.set_page_config(
     page_title="Personal Library Management System",
@@ -83,11 +84,8 @@ st.markdown("""
 def load_lottieurl(url):
     try:
         r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except Exception as e:
-        st.error(f"Error loading Lottie animation: {e}")
+        return r.json() if r.status_code == 200 else None
+    except Exception:
         return None
 
 # Initialize session state
@@ -107,25 +105,20 @@ def load_library():
         if os.path.exists('library.json'):
             with open('library.json', 'r') as file:
                 st.session_state.library = json.load(file)
-            return True
-        return False
     except Exception as e:
-        st.error(f"Error loading library: {e}")
-        return False
+        st.error(f"Error loading library: {str(e)}")
 
 def save_library():
     try:
         with open('library.json', 'w') as file:
             json.dump(st.session_state.library, file)
-        return True
     except Exception as e:
-        st.error(f"Error saving library: {e}")
-        return False
+        st.error(f"Error saving library: {str(e)}")
 
 def add_book(title, author, publication_year, genre, read_status):
     book = {
-        'title': title,
-        'author': author,
+        'title': title.strip(),
+        'author': author.strip(),
         'publication_year': publication_year,
         'genre': genre,
         'read_status': read_status,
@@ -145,52 +138,44 @@ def remove_book(index):
     return False
 
 def search_books(search_term, search_by):
-    search_term = search_term.lower()
+    search_term = search_term.lower().strip()
     results = []
     for book in st.session_state.library:
-        if search_by == "Title" and search_term in book['title'].lower():
-            results.append(book)
-        elif search_by == "Author" and search_term in book['author'].lower():
-            results.append(book)
-        elif search_by == "Genre" and search_term in book['genre'].lower():
+        target = book[search_by.lower()].lower()
+        if search_term in target:
             results.append(book)
     st.session_state.search_results = results
 
 def get_library_stats():
-    total_books = len(st.session_state.library)
-    read_books = sum(1 for book in st.session_state.library if book['read_status'])
-    percent_read = (read_books / total_books * 100) if total_books > 0 else 0
+    stats = {
+        'total_books': len(st.session_state.library),
+        'read_books': sum(book['read_status'] for book in st.session_state.library),
+        'genres': {},
+        'authors': {},
+        'decades': {}
+    }
     
-    genres = {}
-    authors = {}
-    decades = {}
+    stats['percent_read'] = (stats['read_books'] / stats['total_books'] * 100) if stats['total_books'] > 0 else 0
     
     for book in st.session_state.library:
-        # Count genres
+        # Update genre counts
         genre = book['genre']
-        genres[genre] = genres.get(genre, 0) + 1
+        stats['genres'][genre] = stats['genres'].get(genre, 0) + 1
         
-        # Count authors
+        # Update author counts
         author = book['author']
-        authors[author] = authors.get(author, 0) + 1
+        stats['authors'][author] = stats['authors'].get(author, 0) + 1
         
-        # Count decades
+        # Update decade counts
         decade = (book['publication_year'] // 10) * 10
-        decades[decade] = decades.get(decade, 0) + 1
+        stats['decades'][decade] = stats['decades'].get(decade, 0) + 1
     
     # Sort dictionaries
-    genres = dict(sorted(genres.items(), key=lambda x: x[1], reverse=True))
-    authors = dict(sorted(authors.items(), key=lambda x: x[1], reverse=True))
-    decades = dict(sorted(decades.items()))
+    stats['genres'] = dict(sorted(stats['genres'].items(), key=lambda x: -x[1]))
+    stats['authors'] = dict(sorted(stats['authors'].items(), key=lambda x: -x[1]))
+    stats['decades'] = dict(sorted(stats['decades'].items()))
     
-    return {
-        'total_books': total_books,
-        'read_books': read_books,
-        'percent_read': percent_read,
-        'genres': genres,
-        'authors': authors,
-        'decades': decades
-    }
+    return stats
 
 def create_visualizations(stats):
     if stats['total_books'] > 0:
@@ -250,33 +235,24 @@ def create_visualizations(stats):
         )
         st.plotly_chart(fig_decades, use_container_width=True)
 
-# Load library
+# Initial library load
 load_library()
 
 # Sidebar Navigation
 st.sidebar.markdown("<h1 style='text-align: center;'>Navigation</h1>", unsafe_allow_html=True)
 lottie_book = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_yr6xtg8o.json")
 if lottie_book:
-    st.sidebar.lottie(lottie_book, height=150, key='book_animation')
+    st_lottie(lottie_book, height=150, key='book_animation')
 
-nav_option = st.sidebar.radio(
+st.session_state.current_view = st.sidebar.radio(
     "Choose an option:",
     ["View Library", "Add Book", "Search Books", "Library Statistics"]
 )
 
-if nav_option == "View Library":
-    st.session_state.current_view = "library"
-elif nav_option == "Add Book":
-    st.session_state.current_view = "add"
-elif nav_option == "Search Books":
-    st.session_state.current_view = "search"
-elif nav_option == "Library Statistics":
-    st.session_state.current_view = "stats"
-
 # Main content
 st.markdown("<h1 class='main-header'>Personal Library Manager</h1>", unsafe_allow_html=True)
 
-if st.session_state.current_view == "add":
+if st.session_state.current_view == "Add Book":
     st.markdown("<h2 class='sub-header'>Add a New Book</h2>", unsafe_allow_html=True)
     
     with st.form(key='add_book_form'):
@@ -297,18 +273,15 @@ if st.session_state.current_view == "add":
                 "Music", "Religion"
             ])
             read_status = st.radio("Read Status", ["Read", "Unread"], horizontal=True)
-            read_bool = read_status == "Read"
         
-        submit_button = st.form_submit_button(label="Add Book")
-    
-    if submit_button and title and author:
-        add_book(title, author, publication_year, genre, read_bool)
-        if st.session_state.book_added:
-            st.markdown("<div class='success-message'>Book added successfully! 📚</div>", unsafe_allow_html=True)
-            st.balloons()
-            st.session_state.book_added = False
+        if st.form_submit_button(label="Add Book") and title.strip() and author.strip():
+            add_book(title, author, publication_year, genre, read_status == "Read")
+            if st.session_state.book_added:
+                st.markdown("<div class='success-message'>Book added successfully! 📚</div>", unsafe_allow_html=True)
+                st.balloons()
+                st.session_state.book_added = False
 
-elif st.session_state.current_view == "library":
+elif st.session_state.current_view == "View Library":
     st.markdown("<h2 class='sub-header'>Your Library</h2>", unsafe_allow_html=True)
     
     if not st.session_state.library:
@@ -347,37 +320,36 @@ elif st.session_state.current_view == "library":
             st.markdown("<div class='success-message'>Book removed successfully! ❌</div>", unsafe_allow_html=True)
             st.session_state.book_removed = False
 
-elif st.session_state.current_view == "search":
+elif st.session_state.current_view == "Search Books":
     st.markdown("<h2 class='sub-header'>Search Books</h2>", unsafe_allow_html=True)
     
     search_by = st.selectbox("Search by:", ["Title", "Author", "Genre"])
     search_term = st.text_input("Enter search term:")
     
-    if st.button("Search", use_container_width=True):
-        if search_term:
-            with st.spinner("Searching..."):
-                time.sleep(0.5)
-                search_books(search_term, search_by)
-                if st.session_state.search_results:
-                    st.markdown(f"<h3>Found {len(st.session_state.search_results)} results:</h3>", 
-                               unsafe_allow_html=True)
-                    for book in st.session_state.search_results:
-                        st.markdown(f"""
-                        <div class='book-card'>
-                            <h3>{book['title']}</h3>
-                            <p><strong>Author:</strong> {book['author']}</p>
-                            <p><strong>Publication Year:</strong> {book['publication_year']}</p>
-                            <p><strong>Genre:</strong> {book['genre']}</p>
-                            <p><span class='{"read-badge" if book["read_status"] else "unread-badge"}'>
-                                {"Read" if book["read_status"] else "Unread"}
-                            </span></p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    st.markdown("<div class='warning-message'>No books found matching your search. 🔍</div>", 
-                               unsafe_allow_html=True)
+    if st.button("Search", use_container_width=True) and search_term.strip():
+        with st.spinner("Searching..."):
+            time.sleep(0.5)
+            search_books(search_term.strip(), search_by)
+            if st.session_state.search_results:
+                st.markdown(f"<h3>Found {len(st.session_state.search_results)} results:</h3>", 
+                           unsafe_allow_html=True)
+                for book in st.session_state.search_results:
+                    st.markdown(f"""
+                    <div class='book-card'>
+                        <h3>{book['title']}</h3>
+                        <p><strong>Author:</strong> {book['author']}</p>
+                        <p><strong>Publication Year:</strong> {book['publication_year']}</p>
+                        <p><strong>Genre:</strong> {book['genre']}</p>
+                        <p><span class='{"read-badge" if book["read_status"] else "unread-badge"}'>
+                            {"Read" if book["read_status"] else "Unread"}
+                        </span></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='warning-message'>No books found matching your search. 🔍</div>", 
+                           unsafe_allow_html=True)
 
-elif st.session_state.current_view == "stats":
+elif st.session_state.current_view == "Library Statistics":
     st.markdown("<h2 class='sub-header'>Library Statistics</h2>", unsafe_allow_html=True)
     
     if not st.session_state.library:
@@ -403,4 +375,4 @@ elif st.session_state.current_view == "stats":
 
 # Footer
 st.markdown("---")
-st.markdown("Copyright © 2024 Farida Bano - Personal Library Manager", unsafe_allow_html=True)
+st.markdown("Copyright © 2024 - Personal Library Manager", unsafe_allow_html=True)
