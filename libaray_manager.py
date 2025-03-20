@@ -30,8 +30,8 @@ st.markdown("""
     .sub-header {
         font-size: 1.8rem !important;
         color: #3882f6;
-        font-weight: 600;
-        margin-bottom: 1rem;
+        font-weight: 600,
+        margin-bottom: "1rem"
     }
     .success-message {
         padding: 1rem;
