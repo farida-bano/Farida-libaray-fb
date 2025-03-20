@@ -30,8 +30,8 @@ st.markdown("""
     .sub-header {
         font-size: 1.8rem !important;
         color: #3882f6;
-        font-weight: 600,
-        margin-bottom: "1rem"
+        font-weight: 600;
+        margin-bottom: 1rem;
     }
     .success-message {
         padding: 1rem;
@@ -104,14 +104,25 @@ def load_library():
     try:
         if os.path.exists('library.json'):
             with open('library.json', 'r') as file:
-                st.session_state.library = json.load(file)
+                content = file.read()
+                if not content.strip():  # Check for empty file
+                    st.session_state.library = []
+                else:
+                    st.session_state.library = json.loads(content)
+        else:
+            st.session_state.library = []
     except Exception as e:
         st.error(f"Error loading library: {str(e)}")
-
+        st.session_state.library = []  # Force initialize
 def save_library():
     try:
         with open('library.json', 'w') as file:
-            json.dump(st.session_state.library, file)
+            json.dump(
+                st.session_state.library,
+                file,
+                indent=4,  # Readable formatting
+                ensure_ascii=False  # Unicode support
+            )
     except Exception as e:
         st.error(f"Error saving library: {str(e)}")
 
