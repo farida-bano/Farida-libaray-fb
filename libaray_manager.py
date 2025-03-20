@@ -437,7 +437,5 @@ with st.container():
                 st.metric("📈 Percentage Read", f"{stats['percent_read']:.1f}%")
             
             create_visualizations(stats)
-
-st.markdown("---")
 st.markdown("<div style='text-align: center; color: #666;'>Copyright © 2024 Farida Bano - Personal Library Manager 📚</div>", 
-            unsafe_allow_html=True)
+            unsafe_allow_html=True)  # 34 line main error araha hy
