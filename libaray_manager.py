@@ -24,8 +24,6 @@ st.markdown("""
        .main-header{
        font-size:3rem 1important;
        color-weight:700;
-       margin-bottom:1rem;
-       text-align:center;
        text-shadow:2px 2px 4px rgba(0,0,0,1);
      }
        .sub_header{
@@ -35,12 +33,8 @@ st.markdown("""
        margin-bottom:1rem;
      }
        .sucess-message{
-       padding:1rem;
-       background-color:#ECFDFS;
+       background-color:#ECFDF5;
        border-left: 5px solid #1089981;
-       border-radius:0.375rem;
-       backgroun-color:#fef3c7;
-       border-radius:0.375rem;
 }
 
 .book-card{
@@ -113,7 +107,7 @@ if 'current_view' not in st.session_state:
 def load_library():
     try:
        if os.path.exists('library.json'):
-          with open('labrary.json','r')as file:
+          with open('library.json','r')as file:
              st.session_state.library =json.load (file)
              return True
           return False
@@ -250,8 +244,8 @@ def create_vlsulations(stats):
   xyxis_title='Numbers of Books',
   height=400
 )
-  st.plotly_chart(fig_genres,ues_container_width=True)
-  if stats['decade']:
+st.plotly_chart(fig_genres, use_container_width=True)
+ if stats['decade']:
     'Decade': [f"{decade}s" for decade in stats['decades'].keys()],
     'Count' : list(stats['decades'].values())
 fig_decades = px.line(
@@ -294,11 +288,11 @@ elif nav_option == "Library Statistics":
     st.session_state.current_view = "stats"
 
 st.markdown("<h1 className='main-header'>Personal Library Manger</h1>",unsafe_allow_html=True)
-if st.session_state.current/_view == "add":
+if st.session_state.current_view == "add":
   st.markdown("<h2 className = 'sub-header'>Add a new book</h2>",unsafe_allow_html=True)
 
   #adding book input fore
-  with st.form( key='add_book_form'):
+with st.form( key='add_book_form'):
     col1,col2=st.colums(2)
 with col1:
   title= st.text_input("Book Title", max_chars=100)
@@ -321,7 +315,7 @@ with col2:
       st.session_state.book_added =False
 
   elif st.session_state.current_view =="library":
-    st.markdown("<h2 class ='sub_header' Your Library></h2>",unsafe_allow_html=True")
+  st.markdown("<h2 class='sub-header'>Your Library</h2>", unsafe_allow_html=True)
 
   if not st.session_state.labrary:
     st.markdown("<div class='warning_message'>Your library is empty.Add some books to get started!</div>",ubsafe)_allow_html=True)
