@@ -102,7 +102,7 @@ if nav_option == "➕ Add Book":
         title = st.text_input("Book Title", max_chars=100)
         author = st.text_input("Author", max_chars=100)
         year = st.number_input("Publication Year", min_value=1000, max_value=datetime.now().year, value=2023)
-        genre = st.selectbox("Genre", ["Fiction", "Non-Fiction", "Science", "Technology", "History", "Romance", "Poetry"])
+        genre = st.selectbox("Genre", ["Fiction", "Non-Fiction", "Science", "Technology", "History", "Romance", "Poetry","Cooking","Fashion"])
         read_status = st.radio("Read Status", ["Read ✅", "Unread 📖"])
         
         if st.form_submit_button("Add Book"):
