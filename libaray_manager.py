@@ -31,7 +31,7 @@ def set_bg_image():
         .content-wrapper {
             background-color: rgba(255, 255, 255, 0.9);
             padding: 2rem;
-           
+            margin-bottom: 1rem;
         }
         </style>
         """,
